@@ -9,6 +9,24 @@ from scipy.signal import butter, lfilter
 import soundfile as sf
 from scipy.interpolate import interp1d
 
+# 🌟 Initialize session state
+if "started" not in st.session_state:
+    st.session_state.started = False
+
+# 💡 Splash / Start Page
+if not st.session_state.started:
+    st.title("🎶 Welcome to the Voice Pitch Detection System")
+    st.markdown("Developed by Group 2, National University")
+    st.markdown("""
+        This tool allows you to upload an audio file (voice or tone),
+        apply a bandpass filter, and visualize the estimated pitch over time.
+    """)
+    if st.button("▶️ Start"):
+        st.session_state.started = True
+        st.experimental_rerun()
+    st.stop()
+
+# 🎵 Main Pitch Detection App
 st.title("🎵 Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
@@ -19,7 +37,6 @@ audio_file = st.sidebar.file_uploader("Upload a voice or tone file (WAV/MP3)", t
 st.sidebar.header("Bandpass Filter Settings")
 lowcut = st.sidebar.slider("Lowcut Frequency (Hz)", min_value=20, max_value=500, value=50, step=10)
 highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=480, max_value=2000, value=1000, step=10)
-
 
 # Bandpass filter functions
 def butter_bandpass(lowcut, highcut, fs, order=4):
@@ -70,7 +87,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         pitches = interp(times)
     return times, pitches
 
-# Main logic
+# Main logic after audio is uploaded
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
         tmp_file.write(audio_file.read())
