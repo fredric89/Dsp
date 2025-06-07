@@ -14,7 +14,7 @@ st.markdown("Developed by Group 2, National University")
 st.sidebar.header("Upload Settings")
 audio_file = st.sidebar.file_uploader("Upload a pre-recorded voice file (WAV/MP3)", type=["wav", "mp3"])
 
-# Bandpass filter for human voice
+# Bandpass filter for human voice range
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyquist = 0.5 * fs
     low = lowcut / nyquist
@@ -27,6 +27,7 @@ def bandpass_filter(data, lowcut, highcut, fs, order=5):
     y = lfilter(b, a, data)
     return y
 
+# Autocorrelation-based pitch detection
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
     pitches = np.zeros(num_frames)
@@ -42,7 +43,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         rising_edges = np.where(d > 0)[0]
 
         if rising_edges.size == 0:
-            pitch = 0  # silent or flat frame
+            pitch = 0
         else:
             start_peak = rising_edges[0]
             peak = np.argmax(autocorr[start_peak:]) + start_peak
@@ -51,7 +52,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
             else:
                 pitch = 0
 
-        pitches[i] = pitch if 50 < pitch < 1000 else 0  # limit to human pitch
+        pitches[i] = pitch if 50 < pitch < 1000 else 0  # limit to human voice range
         times[i] = start / sr
 
     # Interpolate unvoiced segments
@@ -61,7 +62,6 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         pitches = interp_func(times)
 
     return times, pitches
-
 
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
@@ -77,6 +77,11 @@ if audio_file is not None:
 
     # Preprocessing
     y_filtered = bandpass_filter(y, 85, 255, sr, order=6)
+    y_filtered = np.nan_to_num(y_filtered, nan=0.0, posinf=0.0, neginf=0.0)
+
+    # Optional: Normalize if signal isn't flat
+    if np.max(np.abs(y_filtered)) > 0:
+        y_filtered = y_filtered / np.max(np.abs(y_filtered))
 
     frame_duration = 0.03  # 30 ms
     frame_size = int(sr * frame_duration)
@@ -106,10 +111,10 @@ st.markdown("---")
 st.markdown("""
 **System Workflow Summary:**
 
-- 🎙️ Input: Pre-recorded voice from a microphone or file  
-- 🎛️ Pre-processing: Mono conversion, bandpass filtering, noise reduction  
-- 🔍 Processing: Framing, pitch detection using autocorrelation  
-- 📊 Output: Real-time-like visualization of waveform and pitch contour
+- 🎙️ **Input**: Pre-recorded voice from a microphone or file  
+- 🎛️ **Pre-processing**: Mono conversion, bandpass filtering (85–255 Hz), noise cleanup  
+- 🔍 **Processing**: Framing (30ms), autocorrelation pitch detection, interpolation  
+- 📊 **Output**: Waveform and pitch-over-time graph
 
-**Note:** Silent frames are interpolated to ensure pitch continuity.
+**Note:** Silent frames are interpolated for smoother pitch visualization.
 """)
