@@ -11,26 +11,27 @@ from scipy.interpolate import interp1d
 
 st.set_page_config(page_title="Voice Pitch Detector", layout="wide")
 
-# Initialize session state
+# Session state to control start screen
 if 'started' not in st.session_state:
     st.session_state.started = False
 
-# Landing Page
+# Start Screen
 if not st.session_state.started:
     st.title("🎤 Voice Pitch Detection System")
     st.markdown("Developed by Group 2, National University")
-    st.image("https://i.imgur.com/9V5pH1F.png", use_column_width=True)  # Optional: your logo or banner
     st.markdown("---")
-    st.markdown("Click below to begin using the pitch detection tool.")
-    if st.button("▶Start"):
+    st.markdown("This system analyzes uploaded audio to detect and visualize voice pitch.")
+    if st.button("▶️ Start"):
         st.session_state.started = True
+        st.experimental_rerun()
     st.stop()
 
-# ===== MAIN SYSTEM =====
+# MAIN APP STARTS HERE
+
 st.title("🎵 Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
-# Sidebar
+# Sidebar: Upload audio and filter settings
 st.sidebar.header("Upload Audio File")
 audio_file = st.sidebar.file_uploader("Upload a voice or tone file (WAV/MP3)", type=["wav", "mp3"])
 
@@ -50,7 +51,7 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     return lfilter(b, a, data)
 
-# Pitch detection
+# Pitch detection with autocorrelation
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
     pitches = np.zeros(num_frames)
@@ -100,13 +101,13 @@ if audio_file is not None:
     st.write(f"**Duration:** {duration:.2f} seconds")
     st.write(f"**Sampling Rate:** {sr} Hz")
 
-    # Waveform: Original
+    # Display original waveform
     fig_raw, ax_raw = plt.subplots(figsize=(10, 2))
     librosa.display.waveshow(y, sr=sr, ax=ax_raw)
     ax_raw.set(title='Original Audio (Before Filtering)')
     st.pyplot(fig_raw)
 
-    # Filter audio
+    # Apply bandpass filter
     y_filtered = bandpass_filter(y, lowcut, highcut, sr)
     y_filtered = np.nan_to_num(y_filtered)
 
@@ -120,7 +121,7 @@ if audio_file is not None:
     if np.all(np.abs(y_filtered) < 1e-5):
         st.warning("⚠️ Filtered signal is too quiet or empty. Adjust the bandpass filter range.")
     else:
-        frame_duration = 0.03
+        frame_duration = 0.03  # 30ms
         frame_size = int(sr * frame_duration)
         hop_size = frame_size // 2
 
