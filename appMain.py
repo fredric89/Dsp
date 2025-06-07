@@ -18,7 +18,8 @@ audio_file = st.sidebar.file_uploader("Upload a voice or tone file (WAV/MP3)", t
 
 st.sidebar.header("Bandpass Filter Settings")
 lowcut = st.sidebar.slider("Lowcut Frequency (Hz)", min_value=20, max_value=500, value=50, step=10)
-highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=600, max_value=2000, value=1000, step=50)
+highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=480, max_value=2000, value=1000, step=10)
+
 
 # Bandpass filter functions
 def butter_bandpass(lowcut, highcut, fs, order=4):
