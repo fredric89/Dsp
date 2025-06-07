@@ -27,7 +27,6 @@ def bandpass_filter(data, lowcut, highcut, fs, order=5):
     y = lfilter(b, a, data)
     return y
 
-# Autocorrelation-based pitch detection
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
     pitches = np.zeros(num_frames)
@@ -38,26 +37,31 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         frame = y[start:start+frame_size]
         frame = frame - np.mean(frame)
         autocorr = np.correlate(frame, frame, mode='full')[frame_size:]
-        
-        d = np.diff(autocorr)
-        start_peak = np.where(d > 0)[0][0]
-        peak = np.argmax(autocorr[start_peak:]) + start_peak
-        
-        if autocorr[peak] > 0:
-            pitch = sr / peak
-        else:
-            pitch = 0
 
-        pitches[i] = pitch if 50 < pitch < 1000 else 0  # human voice range
+        d = np.diff(autocorr)
+        rising_edges = np.where(d > 0)[0]
+
+        if rising_edges.size == 0:
+            pitch = 0  # silent or flat frame
+        else:
+            start_peak = rising_edges[0]
+            peak = np.argmax(autocorr[start_peak:]) + start_peak
+            if autocorr[peak] > 0:
+                pitch = sr / peak
+            else:
+                pitch = 0
+
+        pitches[i] = pitch if 50 < pitch < 1000 else 0  # limit to human pitch
         times[i] = start / sr
 
-    # Interpolation of unvoiced segments
+    # Interpolate unvoiced segments
     non_zero = pitches > 0
     if np.sum(non_zero) > 1:
         interp_func = interp1d(times[non_zero], pitches[non_zero], kind='linear', fill_value='extrapolate')
         pitches = interp_func(times)
 
     return times, pitches
+
 
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
