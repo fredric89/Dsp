@@ -12,6 +12,7 @@ from scipy.interpolate import interp1d
 st.title("Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
+# Sidebar: Upload and filter controls
 st.sidebar.header("Upload Settings")
 audio_file = st.sidebar.file_uploader("Upload a pre-recorded voice file (WAV/MP3)", type=["wav", "mp3"])
 
@@ -19,12 +20,7 @@ st.sidebar.header("Filter Settings")
 lowcut = st.sidebar.slider("Lowcut Frequency (Hz)", min_value=20, max_value=500, value=50)
 highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=600, max_value=2000, value=1000)
 
-st.sidebar.header("Testing Parameters")
-expected_pitch = st.sidebar.number_input("Expected Pitch (Hz)", min_value=20.0, max_value=2000.0, step=1.0)
-margin_type = st.sidebar.radio("Select Accuracy Margin", ["Music (±1 Hz)", "Speech (±5 Hz)"])
-margin = 1 if "Music" in margin_type else 5
-
-# Bandpass filter
+# Bandpass filter functions
 def butter_bandpass(lowcut, highcut, fs, order=4):
     nyq = 0.5 * fs
     low = lowcut / nyq
@@ -74,14 +70,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         pitches = interp(times)
     return times, pitches
 
-# Accuracy calculation
-def calculate_accuracy(detected_pitches, ground_truth_freq, margin):
-    valid = detected_pitches > 0
-    correct = np.sum(np.abs(detected_pitches[valid] - ground_truth_freq) <= margin)
-    total = np.sum(valid)
-    accuracy = (correct / total) * 100 if total > 0 else 0
-    return accuracy
-
+# Main app logic
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
         tmp_file.write(audio_file.read())
@@ -100,7 +89,7 @@ if audio_file is not None:
     ax_raw.set(title='Original Audio (Before Filtering)')
     st.pyplot(fig_raw)
 
-    # Bandpass filter
+    # Apply bandpass filter
     y_filtered = bandpass_filter(y, lowcut=lowcut, highcut=highcut, fs=sr, order=4)
     y_filtered = np.nan_to_num(y_filtered)
 
@@ -113,7 +102,7 @@ if audio_file is not None:
     st.audio(filtered_path, format='audio/wav')
 
     if np.all(np.abs(y_filtered) < 1e-5):
-        st.warning("⚠️ Filtered signal is too quiet or empty. Try loosening the filter or checking the recording.")
+        st.warning("⚠️ Filtered signal is too quiet or empty. Try adjusting the filter range.")
     else:
         frame_duration = 0.03  # 30 ms
         frame_size = int(sr * frame_duration)
@@ -134,17 +123,12 @@ if audio_file is not None:
 
         st.pyplot(fig)
 
-        # Accuracy and average pitch
         if np.any(pitches > 0):
             avg_pitch = np.mean(pitches[pitches > 0])
-            accuracy = calculate_accuracy(pitches, expected_pitch, margin)
-
-            st.markdown("### 🧪 Pitch Detection Results")
-            st.write(f"**Average Detected Pitch:** {avg_pitch:.2f} Hz")
-            st.write(f"**Expected Pitch:** {expected_pitch:.2f} Hz")
-            st.write(f"**Accuracy (±{margin} Hz):** {accuracy:.2f}%")
+            st.markdown("### 🎯 Estimated Pitch Result")
+            st.write(f"**Average Estimated Pitch:** {avg_pitch:.2f} Hz")
         else:
-            st.warning("❌ No valid pitch detected. Please check the audio signal or try a different sample.")
+            st.warning("❌ No valid pitch detected. Please try a different sample.")
 
     os.unlink(tmp_path)
 else:
