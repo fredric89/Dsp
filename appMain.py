@@ -9,28 +9,28 @@ from scipy.signal import butter, lfilter
 import soundfile as sf
 from scipy.interpolate import interp1d
 
-# 🌟 Initialize session state
-if "started" not in st.session_state:
+st.set_page_config(page_title="Voice Pitch Detector", layout="wide")
+
+# Initialize session state
+if 'started' not in st.session_state:
     st.session_state.started = False
 
-# 💡 Splash / Start Page
+# Landing Page
 if not st.session_state.started:
-    st.title("🎶 Welcome to the Voice Pitch Detection System")
+    st.title("🎤 Voice Pitch Detection System")
     st.markdown("Developed by Group 2, National University")
-    st.markdown("""
-        This tool allows you to upload an audio file (voice or tone),
-        apply a bandpass filter, and visualize the estimated pitch over time.
-    """)
-    if st.button("▶️ Start"):
+    st.image("https://i.imgur.com/9V5pH1F.png", use_column_width=True)  # Optional: your logo or banner
+    st.markdown("---")
+    st.markdown("Click below to begin using the pitch detection tool.")
+    if st.button("▶Start"):
         st.session_state.started = True
-        st.experimental_rerun()
     st.stop()
 
-# 🎵 Main Pitch Detection App
+# ===== MAIN SYSTEM =====
 st.title("🎵 Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
-# Sidebar: Upload audio and filter settings
+# Sidebar
 st.sidebar.header("Upload Audio File")
 audio_file = st.sidebar.file_uploader("Upload a voice or tone file (WAV/MP3)", type=["wav", "mp3"])
 
@@ -50,7 +50,7 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     return lfilter(b, a, data)
 
-# Pitch detection with autocorrelation
+# Pitch detection
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
     pitches = np.zeros(num_frames)
@@ -87,7 +87,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         pitches = interp(times)
     return times, pitches
 
-# Main logic after audio is uploaded
+# Main logic
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
         tmp_file.write(audio_file.read())
@@ -100,13 +100,13 @@ if audio_file is not None:
     st.write(f"**Duration:** {duration:.2f} seconds")
     st.write(f"**Sampling Rate:** {sr} Hz")
 
-    # Display original waveform
+    # Waveform: Original
     fig_raw, ax_raw = plt.subplots(figsize=(10, 2))
     librosa.display.waveshow(y, sr=sr, ax=ax_raw)
     ax_raw.set(title='Original Audio (Before Filtering)')
     st.pyplot(fig_raw)
 
-    # Apply bandpass filter
+    # Filter audio
     y_filtered = bandpass_filter(y, lowcut, highcut, sr)
     y_filtered = np.nan_to_num(y_filtered)
 
@@ -120,7 +120,7 @@ if audio_file is not None:
     if np.all(np.abs(y_filtered) < 1e-5):
         st.warning("⚠️ Filtered signal is too quiet or empty. Adjust the bandpass filter range.")
     else:
-        frame_duration = 0.03  # 30ms
+        frame_duration = 0.03
         frame_size = int(sr * frame_duration)
         hop_size = frame_size // 2
 
