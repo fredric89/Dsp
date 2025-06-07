@@ -5,35 +5,21 @@ import librosa
 import librosa.display
 import tempfile
 import os
-import sounddevice as sd
-import soundfile as sf
 import scipy.signal
+import json
 
 st.title("🎤 Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
 # === AUDIO INPUT SECTION ===
-st.sidebar.header("Audio Input Mode")
-mode = st.sidebar.radio("Select Input Type", ["Upload Audio File", "Record Live Audio"])
+st.sidebar.header("Audio Input")
+audio_file = st.sidebar.file_uploader("Upload a WAV/MP3 file", type=["wav", "mp3"])
 
-if mode == "Upload Audio File":
-    audio_file = st.sidebar.file_uploader("Upload a WAV/MP3 file", type=["wav", "mp3"])
-    if audio_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
-            tmp_file.write(audio_file.read())
-            tmp_path = tmp_file.name
-else:
-    duration = st.sidebar.slider("Recording Duration (seconds)", 1, 10, 5)
-    if st.sidebar.button("🎙️ Record"):
-        with st.spinner("Recording..."):
-            fs = 44100
-            recording = sd.rec(int(duration * fs), samplerate=fs, channels=1)
-            sd.wait()
-            tmp_path = tempfile.mktemp(suffix=".wav", delete=False)
-            sf.write(tmp_path, recording, fs)
-            st.success("Recording complete!")
+if audio_file is not None:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
+        tmp_file.write(audio_file.read())
+        tmp_path = tmp_file.name
 
-if 'tmp_path' in locals():
     y, sr = librosa.load(tmp_path, sr=None, mono=True)
     duration = librosa.get_duration(y=y, sr=sr)
 
@@ -60,13 +46,29 @@ if 'tmp_path' in locals():
     y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)
     y = np.clip(y, -1e3, 1e3)
 
-    st.write("**Signal Stats After Preprocessing**")
-    st.json({
+    # Highlighted Signal Stats JSON Output
+    stats_json = {
         "min": float(np.min(y)),
         "max": float(np.max(y)),
         "mean": float(np.mean(y)),
         "std": float(np.std(y)),
-    })
+    }
+    stats_str = json.dumps(stats_json, indent=4)
+
+    st.markdown(
+        f"""
+        <div style="
+            background-color:#f0f4f8; 
+            border-left: 6px solid #1E90FF; 
+            padding: 10px; 
+            font-family: monospace;
+            white-space: pre-wrap;
+        ">
+        {stats_str}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # === PITCH DETECTION SECTION ===
     frame_length = 2048
@@ -126,7 +128,7 @@ if 'tmp_path' in locals():
     os.unlink(tmp_path)
 
 else:
-    st.info("Please upload or record an audio sample to start analysis.")
+    st.info("Please upload an audio file to start pitch detection.")
 
 st.markdown("---")
-st.markdown("**Note:** Supports autocorrelation and YIN pitch estimation, live audio, and visual feedback via waveform, pitch line, and spectrogram.")
+st.markdown("**Note:** This version supports pitch detection using Autocorrelation or YIN, and displays waveform and spectrogram visualizations.")
