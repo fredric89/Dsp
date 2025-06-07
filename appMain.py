@@ -15,6 +15,10 @@ st.markdown("Developed by Group 2, National University")
 st.sidebar.header("Upload Settings")
 audio_file = st.sidebar.file_uploader("Upload a pre-recorded voice file (WAV/MP3)", type=["wav", "mp3"])
 
+st.sidebar.header("Filter Settings")
+lowcut = st.sidebar.slider("Lowcut Frequency (Hz)", min_value=20, max_value=500, value=50)
+highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=600, max_value=2000, value=1000)
+
 st.sidebar.header("Testing Parameters")
 expected_pitch = st.sidebar.number_input("Expected Pitch (Hz)", min_value=20.0, max_value=2000.0, step=1.0)
 margin_type = st.sidebar.radio("Select Accuracy Margin", ["Music (±1 Hz)", "Speech (±5 Hz)"])
@@ -97,7 +101,7 @@ if audio_file is not None:
     st.pyplot(fig_raw)
 
     # Bandpass filter
-    y_filtered = bandpass_filter(y, lowcut=50, highcut=1000, fs=sr, order=4)
+    y_filtered = bandpass_filter(y, lowcut=lowcut, highcut=highcut, fs=sr, order=4)
     y_filtered = np.nan_to_num(y_filtered)
 
     if np.max(np.abs(y_filtered)) > 1e-5:
