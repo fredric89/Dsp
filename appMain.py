@@ -20,37 +20,37 @@ if audio_file is not None:
         tmp_path = tmp_file.name
 
     # Load the audio using librosa
-y, sr = librosa.load(tmp_path, sr=None, mono=True)
-duration = librosa.get_duration(y=y, sr=sr)
+    y, sr = librosa.load(tmp_path, sr=None, mono=True)
+    duration = librosa.get_duration(y=y, sr=sr)
 
-st.audio(audio_file, format='audio/wav')
-st.write(f"**Duration:** {duration:.2f} seconds")
-st.write(f"**Sampling Rate:** {sr} Hz")
+    st.audio(audio_file, format='audio/wav')
+    st.write(f"**Duration:** {duration:.2f} seconds")
+    st.write(f"**Sampling Rate:** {sr} Hz")
 
-# --- Pre-processing functions ---
-def bandpass_filter(signal, lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = max(lowcut / nyq, 0.001)
-    high = min(highcut / nyq, 0.999)
-    if low >= high:
-        return signal  # fallback to unfiltered if cutoff is invalid
-    sos = scipy.signal.butter(order, [low, high], btype='band', output='sos')
-    return scipy.signal.sosfilt(sos, signal)
+    # --- Pre-processing functions ---
+    def bandpass_filter(signal, lowcut, highcut, fs, order=5):
+        nyq = 0.5 * fs
+        low = max(lowcut / nyq, 0.001)
+        high = min(highcut / nyq, 0.999)
+        if low >= high:
+            return signal  # fallback to unfiltered if cutoff is invalid
+        sos = scipy.signal.butter(order, [low, high], btype='band', output='sos')
+        return scipy.signal.sosfilt(sos, signal)
 
-# --- Apply Pre-processing Steps ---
-y = bandpass_filter(y, 80, 300, sr)               # Human speech frequency range
-y = librosa.effects.preemphasis(y)                # Pre-emphasis to enhance clarity
-y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)  # Replace NaN or inf
-y = np.clip(y, -1e3, 1e3)                         # Prevent overflow in plot
+    # --- Apply Pre-processing Steps ---
+    y = bandpass_filter(y, 80, 300, sr)                    # Human speech frequency range
+    y = librosa.effects.preemphasis(y)                     # Pre-emphasis to enhance clarity
+    y = np.nan_to_num(y, nan=0.0, posinf=0.0, neginf=0.0)  # Replace NaN or inf
+    y = np.clip(y, -1e3, 1e3)                              # Prevent overflow in plot
 
-# Optional debug: display signal stats
-st.write("**Signal Stats After Preprocessing**")
-st.json({
-    "min": float(np.min(y)),
-    "max": float(np.max(y)),
-    "mean": float(np.mean(y)),
-    "std": float(np.std(y)),
-})
+    # Optional debug: display signal stats
+    st.write("**Signal Stats After Preprocessing**")
+    st.json({
+        "min": float(np.min(y)),
+        "max": float(np.max(y)),
+        "mean": float(np.mean(y)),
+        "std": float(np.std(y)),
+    })
 
     # Windowing and overlapping
     frame_length = 2048
