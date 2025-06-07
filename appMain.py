@@ -51,9 +51,14 @@ if audio_file is not None:
     y_normalized = normalize_audio(y)
     y_filtered = bandpass_filter(y_normalized, lowcut=50, highcut=1000, fs=sr)
 
-    # Check for finite values in the filtered audio
+    # Debugging: Check for non-finite values
     if not np.all(np.isfinite(y_filtered)):
         st.error("Filtered audio contains non-finite values. Please check the input audio file.")
+        st.write("Debugging Information:")
+        st.write(f"Max value before filtering: {np.max(y_normalized)}")
+        st.write(f"Min value before filtering: {np.min(y_normalized)}")
+        st.write(f"Max value after filtering: {np.max(y_filtered)}")
+        st.write(f"Min value after filtering: {np.min(y_filtered)}")
     else:
         # Frame the audio for pitch detection
         frame_size = 2048
