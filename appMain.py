@@ -15,6 +15,11 @@ st.markdown("Developed by Group 2, National University")
 st.sidebar.header("Upload Settings")
 audio_file = st.sidebar.file_uploader("Upload a pre-recorded voice file (WAV/MP3)", type=["wav", "mp3"])
 
+st.sidebar.header("Testing Parameters")
+expected_pitch = st.sidebar.number_input("Expected Pitch (Hz)", min_value=20.0, max_value=2000.0, step=1.0)
+margin_type = st.sidebar.radio("Select Accuracy Margin", ["Music (±1 Hz)", "Speech (±5 Hz)"])
+margin = 1 if "Music" in margin_type else 5
+
 # Bandpass filter
 def butter_bandpass(lowcut, highcut, fs, order=4):
     nyq = 0.5 * fs
@@ -65,6 +70,14 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         pitches = interp(times)
     return times, pitches
 
+# Accuracy calculation
+def calculate_accuracy(detected_pitches, ground_truth_freq, margin):
+    valid = detected_pitches > 0
+    correct = np.sum(np.abs(detected_pitches[valid] - ground_truth_freq) <= margin)
+    total = np.sum(valid)
+    accuracy = (correct / total) * 100 if total > 0 else 0
+    return accuracy
+
 if audio_file is not None:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
         tmp_file.write(audio_file.read())
@@ -83,11 +96,10 @@ if audio_file is not None:
     ax_raw.set(title='Original Audio (Before Filtering)')
     st.pyplot(fig_raw)
 
-    # Bandpass filter (wider range)
+    # Bandpass filter
     y_filtered = bandpass_filter(y, lowcut=50, highcut=1000, fs=sr, order=4)
     y_filtered = np.nan_to_num(y_filtered)
 
-    # Normalize only if there's signal
     if np.max(np.abs(y_filtered)) > 1e-5:
         y_filtered /= np.max(np.abs(y_filtered))
 
@@ -96,18 +108,16 @@ if audio_file is not None:
     sf.write(filtered_path, y_filtered, sr)
     st.audio(filtered_path, format='audio/wav')
 
-    # Check if filtered signal is silent
     if np.all(np.abs(y_filtered) < 1e-5):
         st.warning("⚠️ Filtered signal is too quiet or empty. Try loosening the filter or checking the recording.")
     else:
-        # Pitch detection
         frame_duration = 0.03  # 30 ms
         frame_size = int(sr * frame_duration)
         hop_size = frame_size // 2
 
         times, pitches = autocorrelation_pitch(y_filtered, sr, frame_size, hop_size)
 
-        # Plot filtered waveform and pitch
+        # Plot waveform and pitch
         fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(10, 6))
         librosa.display.waveshow(y_filtered, sr=sr, ax=ax[0])
         ax[0].set(title='Filtered Audio Waveform')
@@ -120,8 +130,16 @@ if audio_file is not None:
 
         st.pyplot(fig)
 
-    os.unlink(tmp_path)
+        # Accuracy Metrics
+        avg_pitch = np.mean(pitches[pitches > 0])
+        accuracy = calculate_accuracy(pitches, expected_pitch, margin)
 
+        st.markdown("### 🧪 Pitch Detection Results")
+        st.write(f"**Average Detected Pitch:** {avg_pitch:.2f} Hz")
+        st.write(f"**Expected Pitch:** {expected_pitch:.2f} Hz")
+        st.write(f"**Accuracy (±{margin} Hz):** {accuracy:.2f}%")
+
+    os.unlink(tmp_path)
 else:
     st.info("Please upload a voice recording to begin pitch detection.")
 
