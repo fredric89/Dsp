@@ -130,14 +130,17 @@ if audio_file is not None:
 
         st.pyplot(fig)
 
-        # Accuracy Metrics
-        avg_pitch = np.mean(pitches[pitches > 0])
-        accuracy = calculate_accuracy(pitches, expected_pitch, margin)
+        # Accuracy and average pitch
+        if np.any(pitches > 0):
+            avg_pitch = np.mean(pitches[pitches > 0])
+            accuracy = calculate_accuracy(pitches, expected_pitch, margin)
 
-        st.markdown("### 🧪 Pitch Detection Results")
-        st.write(f"**Average Detected Pitch:** {avg_pitch:.2f} Hz")
-        st.write(f"**Expected Pitch:** {expected_pitch:.2f} Hz")
-        st.write(f"**Accuracy (±{margin} Hz):** {accuracy:.2f}%")
+            st.markdown("### 🧪 Pitch Detection Results")
+            st.write(f"**Average Detected Pitch:** {avg_pitch:.2f} Hz")
+            st.write(f"**Expected Pitch:** {expected_pitch:.2f} Hz")
+            st.write(f"**Accuracy (±{margin} Hz):** {accuracy:.2f}%")
+        else:
+            st.warning("❌ No valid pitch detected. Please check the audio signal or try a different sample.")
 
     os.unlink(tmp_path)
 else:
