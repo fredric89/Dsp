@@ -9,25 +9,22 @@ from scipy.signal import butter, lfilter
 import soundfile as sf
 from scipy.interpolate import interp1d
 
-st.set_page_config(page_title="Voice Pitch Detector", layout="wide")
-
-# Session state to control start screen
+# Session state to manage start screen
 if 'started' not in st.session_state:
     st.session_state.started = False
 
-# Start Screen
+# Show start screen
 if not st.session_state.started:
-    st.title("🎤 Voice Pitch Detection System")
+    st.title("🎶 Voice Pitch Detection App")
     st.markdown("Developed by Group 2, National University")
-    st.markdown("---")
-    st.markdown("This system analyzes uploaded audio to detect and visualize voice pitch.")
+    st.markdown("Press start to begin using the app.")
+    
     if st.button("▶️ Start"):
         st.session_state.started = True
-        st.experimental_rerun()
-    st.stop()
 
-# MAIN APP STARTS HERE
+    st.stop()  # Stop execution until user clicks Start
 
+# Main App
 st.title("🎵 Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
@@ -51,7 +48,7 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
     b, a = butter_bandpass(lowcut, highcut, fs, order=order)
     return lfilter(b, a, data)
 
-# Pitch detection with autocorrelation
+# Pitch detection
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
     pitches = np.zeros(num_frames)
