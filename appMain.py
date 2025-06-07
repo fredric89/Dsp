@@ -18,7 +18,10 @@ def bandpass_filter(data, lowcut, highcut, fs, order=5):
 
 # Function to normalize audio
 def normalize_audio(data):
-    return data / np.max(np.abs(data))
+    max_val = np.max(np.abs(data))
+    if max_val == 0:
+        return data  # Avoid division by zero
+    return data / max_val
 
 # Function to frame audio
 def frame_audio(data, frame_size, hop_size):
@@ -48,27 +51,31 @@ if audio_file is not None:
     y_normalized = normalize_audio(y)
     y_filtered = bandpass_filter(y_normalized, lowcut=50, highcut=1000, fs=sr)
 
-    # Frame the audio for pitch detection
-    frame_size = 2048
-    hop_size = 512
-    frames = frame_audio(y_filtered, frame_size, hop_size)
+    # Check for finite values in the filtered audio
+    if not np.all(np.isfinite(y_filtered)):
+        st.error("Filtered audio contains non-finite values. Please check the input audio file.")
+    else:
+        # Frame the audio for pitch detection
+        frame_size = 2048
+        hop_size = 512
+        frames = frame_audio(y_filtered, frame_size, hop_size)
 
-    # Pitch detection using YIN
-    f0 = librosa.yin(y_filtered, fmin=50, fmax=1000, sr=sr, frame_length=frame_size)
-    times = librosa.times_like(f0, sr=sr)
+        # Pitch detection using YIN
+        f0 = librosa.yin(y_filtered, fmin=50, fmax=1000, sr=sr, frame_length=frame_size)
+        times = librosa.times_like(f0, sr=sr)
 
-    # Plot waveform and pitch contour
-    fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(10, 6))
-    librosa.display.waveshow(y, sr=sr, ax=ax[0], alpha=0.6)
-    ax[0].set(title='Audio Waveform')
-    ax[0].label_outer()
+        # Plot waveform and pitch contour
+        fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(10, 6))
+        librosa.display.waveshow(y, sr=sr, ax=ax[0], alpha=0.6)
+        ax[0].set(title='Audio Waveform')
+        ax[0].label_outer()
 
-    ax[1].plot(times, f0, label='Estimated Pitch (Hz)', color='r')
-    ax[1].set(title='Pitch Over Time', xlabel='Time (s)', ylabel='Pitch (Hz)')
-    ax[1].grid(True)
-    ax[1].legend()
+        ax[1].plot(times, f0, label='Estimated Pitch (Hz)', color='r')
+        ax[1].set(title='Pitch Over Time', xlabel='Time (s)', ylabel='Pitch (Hz)')
+        ax[1].grid(True)
+        ax[1].legend()
 
-    st.pyplot(fig)
+        st.pyplot(fig)
 
     os.unlink(tmp_path)  # Clean up the temporary file
 
