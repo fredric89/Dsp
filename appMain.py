@@ -51,21 +51,10 @@ if audio_file is not None:
     y_normalized = normalize_audio(y)
     y_filtered = bandpass_filter(y_normalized, lowcut=50, highcut=1000, fs=sr)
 
-    # Debugging: Check for non-finite values
-    if not np.all(np.isfinite(y_filtered)):
-        st.error("Filtered audio contains non-finite values. Please check the input audio file.")
-        st.write("Debugging Information:")
-        st.write(f"Max value before filtering: {np.max(y_normalized)}")
-        st.write(f"Min value before filtering: {np.min(y_normalized)}")
-        st.write(f"Max value after filtering: {np.max(y_filtered)}")
-        st.write(f"Min value after filtering: {np.min(y_filtered)}")
-    else:
-        # Frame the audio for pitch detection
-        frame_size = 2048
-        hop_size = 512
-        frames = frame_audio(y_filtered, frame_size, hop_size)
-
+    # Ensure the filtered signal is finite before pitch detection
+    if np.all(np.isfinite(y_filtered)):
         # Pitch detection using YIN
+        frame_size = 2048
         f0 = librosa.yin(y_filtered, fmin=50, fmax=1000, sr=sr, frame_length=frame_size)
         times = librosa.times_like(f0, sr=sr)
 
@@ -81,6 +70,8 @@ if audio_file is not None:
         ax[1].legend()
 
         st.pyplot(fig)
+    else:
+        st.error("Filtered audio contains non-finite values. Please check the input audio file.")
 
     os.unlink(tmp_path)  # Clean up the temporary file
 
@@ -89,3 +80,4 @@ else:
 
 st.markdown("---")
 st.markdown("**Note:** This tool uses the YIN algorithm for pitch estimation. Results may vary with background noise or overlapping voices.")
+
