@@ -6,40 +6,64 @@ import librosa.display
 import tempfile
 import os
 from scipy.signal import butter, lfilter
+from scipy.interpolate import interp1d
 
-# Function to apply band-pass filter
-def bandpass_filter(data, lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    y = lfilter(b, a, data)
-    return y
-
-# Function to normalize audio
-def normalize_audio(data):
-    max_val = np.max(np.abs(data))
-    if max_val == 0:
-        return data  # Avoid division by zero
-    return data / max_val
-
-# Function to frame audio
-def frame_audio(data, frame_size, hop_size):
-    return np.array([data[i:i + frame_size] for i in range(0, len(data) - frame_size, hop_size)])
-
-st.title("Voice Pitch Detection and Visualization")
+st.title("Enhanced Voice Pitch Detection and Visualization")
 st.markdown("Developed by Group 2, National University")
 
 st.sidebar.header("Upload Settings")
 audio_file = st.sidebar.file_uploader("Upload a pre-recorded voice file (WAV/MP3)", type=["wav", "mp3"])
 
+# Bandpass filter for human voice
+def butter_bandpass(lowcut, highcut, fs, order=5):
+    nyquist = 0.5 * fs
+    low = lowcut / nyquist
+    high = highcut / nyquist
+    b, a = butter(order, [low, high], btype='band')
+    return b, a
+
+def bandpass_filter(data, lowcut, highcut, fs, order=5):
+    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
+
+# Autocorrelation-based pitch detection
+def autocorrelation_pitch(y, sr, frame_size, hop_size):
+    num_frames = 1 + int((len(y) - frame_size) / hop_size)
+    pitches = np.zeros(num_frames)
+    times = np.zeros(num_frames)
+    
+    for i in range(num_frames):
+        start = i * hop_size
+        frame = y[start:start+frame_size]
+        frame = frame - np.mean(frame)
+        autocorr = np.correlate(frame, frame, mode='full')[frame_size:]
+        
+        d = np.diff(autocorr)
+        start_peak = np.where(d > 0)[0][0]
+        peak = np.argmax(autocorr[start_peak:]) + start_peak
+        
+        if autocorr[peak] > 0:
+            pitch = sr / peak
+        else:
+            pitch = 0
+
+        pitches[i] = pitch if 50 < pitch < 1000 else 0  # human voice range
+        times[i] = start / sr
+
+    # Interpolation of unvoiced segments
+    non_zero = pitches > 0
+    if np.sum(non_zero) > 1:
+        interp_func = interp1d(times[non_zero], pitches[non_zero], kind='linear', fill_value='extrapolate')
+        pitches = interp_func(times)
+
+    return times, pitches
+
 if audio_file is not None:
-    # Save the uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
         tmp_file.write(audio_file.read())
         tmp_path = tmp_file.name
 
-    # Load the audio using librosa
     y, sr = librosa.load(tmp_path, sr=None, mono=True)
     duration = librosa.get_duration(y=y, sr=sr)
 
@@ -47,37 +71,41 @@ if audio_file is not None:
     st.write(f"**Duration:** {duration:.2f} seconds")
     st.write(f"**Sampling Rate:** {sr} Hz")
 
-    # Preprocessing: Normalize and filter the audio
-    y_normalized = normalize_audio(y)
-    y_filtered = bandpass_filter(y_normalized, lowcut=50, highcut=1000, fs=sr)
+    # Preprocessing
+    y_filtered = bandpass_filter(y, 85, 255, sr, order=6)
 
-    # Ensure the filtered signal is finite before pitch detection
-    if np.all(np.isfinite(y_filtered)):
-        # Pitch detection using YIN
-        frame_size = 2048
-        f0 = librosa.yin(y_filtered, fmin=50, fmax=1000, sr=sr, frame_length=frame_size)
-        times = librosa.times_like(f0, sr=sr)
+    frame_duration = 0.03  # 30 ms
+    frame_size = int(sr * frame_duration)
+    hop_size = frame_size // 2
 
-        # Plot waveform and pitch contour
-        fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(10, 6))
-        librosa.display.waveshow(y, sr=sr, ax=ax[0], alpha=0.6)
-        ax[0].set(title='Audio Waveform')
-        ax[0].label_outer()
+    times, pitches = autocorrelation_pitch(y_filtered, sr, frame_size, hop_size)
 
-        ax[1].plot(times, f0, label='Estimated Pitch (Hz)', color='r')
-        ax[1].set(title='Pitch Over Time', xlabel='Time (s)', ylabel='Pitch (Hz)')
-        ax[1].grid(True)
-        ax[1].legend()
+    # Plot waveform and pitch contour
+    fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(10, 6))
+    librosa.display.waveshow(y_filtered, sr=sr, ax=ax[0], alpha=0.6)
+    ax[0].set(title='Filtered Audio Waveform')
+    ax[0].label_outer()
 
-        st.pyplot(fig)
-    else:
-        st.error("Filtered audio contains non-finite values. Please check the input audio file.")
+    ax[1].plot(times, pitches, label='Estimated Pitch (Hz)', color='r')
+    ax[1].set(title='Pitch Over Time (Autocorrelation)', xlabel='Time (s)', ylabel='Pitch (Hz)')
+    ax[1].grid(True)
+    ax[1].legend()
 
-    os.unlink(tmp_path)  # Clean up the temporary file
+    st.pyplot(fig)
+
+    os.unlink(tmp_path)
 
 else:
     st.info("Please upload a voice recording to begin pitch detection.")
 
 st.markdown("---")
-st.markdown("**Note:** This tool uses the YIN algorithm for pitch estimation. Results may vary with background noise or overlapping voices.")
+st.markdown("""
+**System Workflow Summary:**
 
+- 🎙️ Input: Pre-recorded voice from a microphone or file  
+- 🎛️ Pre-processing: Mono conversion, bandpass filtering, noise reduction  
+- 🔍 Processing: Framing, pitch detection using autocorrelation  
+- 📊 Output: Real-time-like visualization of waveform and pitch contour
+
+**Note:** Silent frames are interpolated to ensure pitch continuity.
+""")
