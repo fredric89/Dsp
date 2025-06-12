@@ -85,7 +85,7 @@ if st.session_state.page in ["home", "about"]:
         <div class="nav-container">
             <div class="nav-content">
                 <div class="nav-logo">Voice Pitch Detector</div>
-                <div class="share-link">🔗 <a href="{share_url}" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!'); return false;" style="color: white; text-decoration: none;">Share this app</a></div>
+                <div class="share-link">ℹ️ <a href="#" onclick="alert('This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.'); return false;" style="color: white; text-decoration: none;">About this app</a></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
