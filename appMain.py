@@ -17,9 +17,8 @@ if st.session_state.page in ["home", "about"]:
 
     share_url = "https://voice-pitch-app.streamlit.app"
 
-    st.markdown(f"""
+    st.markdown("""
 <style>
-/* existing styles here */
 #aboutAppModal {
   display: none;
   position: fixed;
@@ -46,12 +45,12 @@ if st.session_state.page in ["home", "about"]:
 """, unsafe_allow_html=True)
 
     st.markdown("""
-    <div id="aboutAppModal">
-      <div class="close" onclick="document.getElementById('aboutAppModal').style.display='none';">✖</div>
-      <h3>About this App</h3>
-      <p>This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.</p>
-    </div>
-    """, unsafe_allow_html=True)
+<div id="aboutAppModal">
+  <div class="close" onclick="document.getElementById('aboutAppModal').style.display='none';">✖</div>
+  <h3>About this App</h3>
+  <p>This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.</p>
+</div>
+""", unsafe_allow_html=True)
 
     st.markdown(f"""
         <div class="nav-container">
