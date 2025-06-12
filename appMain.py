@@ -300,3 +300,4 @@ elif st.session_state.page == "app":
                 os.unlink(tmp_path)
     else:
         st.info("Please upload an audio file to start pitch detection.")
+
