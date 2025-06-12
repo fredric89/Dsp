@@ -17,46 +17,11 @@ if st.session_state.page in ["home", "about"]:
 
     share_url = "https://voice-pitch-app.streamlit.app"
 
-        st.markdown("""
-<style>
-#aboutAppModal {
-  display: none;
-  position: fixed;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  color: black;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.3);
-  z-index: 2000;
-  width: 80%;
-  max-width: 600px;
-}
-#aboutAppModal .close {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-</style>
-""", unsafe_allow_html=True)
-
-    st.markdown("""
-<div id="aboutAppModal">
-  <div class="close" onclick="document.getElementById('aboutAppModal').style.display='none';">✖</div>
-  <h3>About this App</h3>
-  <p>This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.</p>
-</div>
-""", unsafe_allow_html=True)
-
     st.markdown(f"""
         <div class="nav-container">
             <div class="nav-content">
                 <div class="nav-logo">Voice Pitch Detector</div>
-                <div class="share-link"><a href="#" onclick="document.getElementById('aboutAppModal').style.display='block'; return false;" style="color: white; text-decoration: none;">ℹ️ About this app</a></div>
+                
             </div>
         </div>
     """, unsafe_allow_html=True)
