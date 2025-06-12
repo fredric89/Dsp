@@ -16,15 +16,51 @@ if "started" not in st.session_state:
 # 🎬 Landing Page
 if not st.session_state.started:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
-    st.title("🎶 Voice Pitch Detection App")
-    st.markdown("Developed by Group 2, National University")
 
-    # 🔽 Show image stored in the same repo directory
+    # Custom CSS for blur effect and layout
+    st.markdown("""
+        <style>
+        .blurred-background {
+            background-image: url('https://your-image-url-here.jpg');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        .content-box {
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 2rem;
+            border-radius: 10px;
+            margin-top: 100px;
+        }
+        </style>
+        <div class="blurred-background"></div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="content-box">', unsafe_allow_html=True)
+    st.title("🎶 Voice Pitch Detection App")
     st.image("landing.png", use_column_width=True)
 
-    st.markdown("Welcome! Click the button below to get started.")
+    st.markdown("""
+    ### 👋 Welcome!
+    This app allows you to upload a voice or tone recording and visualize its pitch over time using signal processing techniques.
+
+    #### 📌 About the App
+    - Developed by **Group 2, National University**
+    - Uses **bandpass filtering** and **autocorrelation** to estimate pitch
+    - Visualizes both the waveform and pitch contour
+    - Ideal for speech analysis, music studies, and acoustic research
+
+    Click the button below to get started!
+    """)
     if st.button("▶️ Start"):
         st.session_state.started = True
+    st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # 🟢 MAIN APP STARTS HERE
@@ -55,9 +91,6 @@ def bandpass_filter(data, lowcut, highcut, fs, order=4):
 # Autocorrelation pitch detection
 def autocorrelation_pitch(y, sr, frame_size, hop_size):
     num_frames = 1 + int((len(y) - frame_size) / hop_size)
-    pitches = np.zeros(num_frames)
-    times = np.zeros(num_frames)
-
     for i in range(num_frames):
         start = i * hop_size
         frame = y[start:start+frame_size]
@@ -70,7 +103,7 @@ def autocorrelation_pitch(y, sr, frame_size, hop_size):
         if start_peak_candidates.size == 0:
             continue
         start_peak = start_peak_candidates[0]
-        peak = np.argmax(autocorr[start_peak:]) + start_peak
+        start_peak
         if autocorr[peak] > 0:
             pitch = sr / peak
         else:
