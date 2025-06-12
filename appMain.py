@@ -18,74 +18,46 @@ if st.session_state.page in ["home", "about"]:
     share_url = "https://voice-pitch-app.streamlit.app"
 
     st.markdown(f"""
-        <style>
-        .stApp {{
-            background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
-            font-family: 'Segoe UI', sans-serif;
-        }}
-        .nav-container {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-        }}
-        .nav-content {{
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .nav-logo {{
-            color: white;
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }}
-        .main-content {{
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(12px);
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 4rem 2rem;
-            margin: 9rem auto 2rem;
-            max-width: 650px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }}
-        .title {{
-            color: white;
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }}
-        .subtitle {{
-            color: rgba(255, 255, 255, 0.95);
-            font-size: 1.25rem;
-            margin-bottom: 3rem;
-        }}
-        .share-link {{
-            color: #ffffff;
-            font-size: 0.9rem;
-            text-align: right;
-        }}
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
-        </style>
-    """, unsafe_allow_html=True)
+<style>
+/* existing styles here */
+#aboutAppModal {
+  display: none;
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  color: black;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  z-index: 2000;
+  width: 80%;
+  max-width: 600px;
+}
+#aboutAppModal .close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div id="aboutAppModal">
+  <div class="close" onclick="document.getElementById('aboutAppModal').style.display='none';">✖</div>
+  <h3>About this App</h3>
+  <p>This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.</p>
+</div>
+""", unsafe_allow_html=True)
 
     st.markdown(f"""
         <div class="nav-container">
             <div class="nav-content">
                 <div class="nav-logo">Voice Pitch Detector</div>
-                <div class="share-link">ℹ️ <a href="#" onclick="alert('This app analyzes your voice pitch and visualizes key metrics like average pitch, min/max range, and standard deviation using real-time signal processing techniques. Developed by Group 2 from National University.'); return false;" style="color: white; text-decoration: none;">About this app</a></div>
+                <div class="share-link"><a href="#" onclick="document.getElementById('aboutAppModal').style.display='block'; return false;" style="color: white; text-decoration: none;">ℹ️ About this app</a></div>
             </div>
         </div>
     """, unsafe_allow_html=True)
