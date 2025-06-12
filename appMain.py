@@ -78,9 +78,10 @@ if st.session_state.page in ["home", "about"]:
 
     st.markdown(f"""
         <div class="nav-container">
-            <div class="nav-content">
-                <div class="nav-logo">🎵 PitchScope: Your Voice Frequency Visualizer</div>
-            </div>
+    <div class="nav-content">
+        <div class="nav-logo">🎵 PitchScope: Your Voice Frequency Visualizer</div>
+    </div>
+</div>
                 
             </div>
         </div>
