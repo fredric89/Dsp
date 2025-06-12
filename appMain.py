@@ -15,8 +15,7 @@ if "page" not in st.session_state:
 if st.session_state.page in ["home", "about"]:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
 
-    import urllib
-    share_url = st.request.url
+    share_url = "https://voice-pitch-app.streamlit.app"
 
     st.markdown(f"""
         <style>
