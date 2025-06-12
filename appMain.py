@@ -17,7 +17,7 @@ if st.session_state.page in ["home", "about"]:
 
     share_url = "https://voice-pitch-app.streamlit.app"
 
-    st.markdown("""
+        st.markdown("""
 <style>
 #aboutAppModal {
   display: none;
