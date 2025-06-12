@@ -9,19 +9,71 @@ from scipy.signal import butter, lfilter
 import soundfile as sf
 from scipy.interpolate import interp1d
 
-# Session state to manage app start
-if "started" not in st.session_state:
-    st.session_state.started = False
+# Session state to manage app navigation
+if "page" not in st.session_state:
+    st.session_state.page = "home"
 
 # 🎬 Landing Page
-if not st.session_state.started:
+if st.session_state.page in ["home", "about"]:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
 
-    # Custom CSS for gradient background with blur effect
+    # Custom CSS for gradient background with blur effect and navigation
     st.markdown("""
         <style>
         .stApp {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .nav-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 1rem 2rem;
+        }
+        
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-logo {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+        }
+        
+        .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
         }
         
         .main-content {
@@ -31,7 +83,7 @@ if not st.session_state.started:
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 3rem 2rem;
-            margin: 2rem auto;
+            margin: 8rem auto 2rem;
             max-width: 600px;
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             text-align: center;
@@ -48,40 +100,55 @@ if not st.session_state.started:
         .subtitle {
             color: rgba(255, 255, 255, 0.9);
             font-size: 1.2rem;
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
         }
         
-        .welcome-text {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-        
-        .feature-list {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.9rem;
-            line-height: 1.8;
-            margin-bottom: 2rem;
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
             text-align: left;
         }
         
-        .start-button {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px 0 rgba(255, 107, 107, 0.3);
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .start-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px 0 rgba(255, 107, 107, 0.4);
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-title {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .feature-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        .about-content {
+            text-align: left;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+        }
+        
+        .about-section {
+            margin-bottom: 2rem;
+        }
+        
+        .about-title {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
         }
         
         /* Hide default streamlit elements */
@@ -91,39 +158,118 @@ if not st.session_state.started:
         </style>
     """, unsafe_allow_html=True)
 
-    # Landing page content
+    # Navigation
     st.markdown("""
-        <div class="main-content">
-            <div class="title">🎶 Voice Pitch Detector</div>
-            <div class="subtitle">Advanced Audio Analysis Tool</div>
-            
-            <div class="welcome-text">
-                Welcome to our sophisticated voice pitch detection application! 
-                Upload your audio recordings and discover detailed pitch analysis using cutting-edge signal processing techniques.
-            </div>
-            
-            <div class="feature-list">
-                <strong>✨ Key Features:</strong><br>
-                • 🎯 Real-time pitch detection using autocorrelation<br>
-                • 🔧 Customizable bandpass filtering<br>
-                • 📊 Interactive waveform and pitch visualization<br>
-                • 📈 Statistical pitch analysis<br>
-                • 🎵 Support for WAV and MP3 formats<br>
-                • 🏫 Developed by Group 2, National University
+        <div class="nav-container">
+            <div class="nav-content">
+                <div class="nav-logo">🎶 Voice Pitch Detector</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-    # Center the button
-    col1, col2, col3 = st.columns([1, 1, 1])
+    # Navigation buttons
+    col1, col2, col3, col4, col5 = st.columns([1, 1, 1, 1, 1])
     with col2:
-        if st.button("🚀 Start Analysis", key="start_btn"):
-            st.session_state.started = True
+        if st.button("🏠 Home", key="nav_home", use_container_width=True):
+            st.session_state.page = "home"
             st.rerun()
+    with col4:
+        if st.button("ℹ️ About", key="nav_about", use_container_width=True):
+            st.session_state.page = "about"
+            st.rerun()
+
+    if st.session_state.page == "home":
+        # Home page content
+        st.markdown("""
+            <div class="main-content">
+                <div class="title">🎶 Voice Pitch Detector</div>
+                <div class="subtitle">Advanced Audio Analysis Tool</div>
+                
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-title">Accurate Detection</div>
+                        <div class="feature-desc">Real-time pitch detection using autocorrelation algorithms</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔧</div>
+                        <div class="feature-title">Custom Filtering</div>
+                        <div class="feature-desc">Adjustable bandpass filters for precise analysis</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Visual Analysis</div>
+                        <div class="feature-desc">Interactive waveform and pitch visualization</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📈</div>
+                        <div class="feature-title">Statistics</div>
+                        <div class="feature-desc">Comprehensive pitch statistics and metrics</div>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Center the start button
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("🚀 Start Analysis", key="start_btn", use_container_width=True):
+                st.session_state.page = "app"
+                st.rerun()
+    
+    elif st.session_state.page == "about":
+        # About page content
+        st.markdown("""
+            <div class="main-content">
+                <div class="title">About This Project</div>
+                
+                <div class="about-content">
+                    <div class="about-section">
+                        <div class="about-title">🎓 Academic Project</div>
+                        <p>This Voice Pitch Detection application was developed by <strong>Group 2</strong> from <strong>National University</strong> as part of our signal processing and audio analysis coursework.</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <div class="about-title">🔬 Technical Implementation</div>
+                        <p>The application uses advanced digital signal processing techniques including:</p>
+                        <ul>
+                            <li><strong>Autocorrelation Algorithm:</strong> For accurate pitch estimation</li>
+                            <li><strong>Butterworth Bandpass Filtering:</strong> To isolate frequency ranges</li>
+                            <li><strong>Librosa Library:</strong> For professional audio processing</li>
+                            <li><strong>Real-time Visualization:</strong> Using Matplotlib for data representation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="about-section">
+                        <div class="about-title">🎯 Applications</div>
+                        <p>This tool can be used for:</p>
+                        <ul>
+                            <li>Speech analysis and linguistics research</li>
+                            <li>Music education and vocal training</li>
+                            <li>Audio quality assessment</li>
+                            <li>Acoustic research and analysis</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="about-section">
+                        <div class="about-title">💻 Technology Stack</div>
+                        <p>Built using Python with Streamlit, NumPy, SciPy, Librosa, and Matplotlib for a comprehensive audio analysis experience.</p>
+                    </div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # Back to Home button
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("🏠 Back to Home", key="back_home", use_container_width=True):
+                st.session_state.page = "home"
+                st.rerun()
     
     st.stop()
 
 # 🟢 MAIN APP STARTS HERE
+elif st.session_state.page == "app":
 st.set_page_config(page_title="Voice Pitch Detection", layout="wide")
 
 # Custom CSS for main app
@@ -167,8 +313,8 @@ lowcut = st.sidebar.slider("Lowcut Frequency (Hz)", min_value=20, max_value=500,
 highcut = st.sidebar.slider("Highcut Frequency (Hz)", min_value=480, max_value=2000, value=1000, step=10)
 
 # Add reset button in sidebar
-if st.sidebar.button("🔄 Reset to Landing Page"):
-    st.session_state.started = False
+if st.sidebar.button("🔄 Back to Home"):
+    st.session_state.page = "home"
     st.rerun()
 
 # Filtering functions
