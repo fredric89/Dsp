@@ -270,7 +270,7 @@ if st.session_state.page in ["home", "about"]:
 
 # 🟢 MAIN APP STARTS HERE
 elif st.session_state.page == "app":
-st.set_page_config(page_title="Voice Pitch Detection", layout="wide")
+    st.set_page_config(page_title="Voice Pitch Detection", layout="wide")
 
 # Custom CSS for main app
 st.markdown("""
