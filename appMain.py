@@ -15,77 +15,72 @@ if "page" not in st.session_state:
 if st.session_state.page in ["home", "about"]:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
 
-    share_url = "https://voice-pitch-app.streamlit.app"
-
-    st.markdown(f"""
+    st.markdown("""
         <style>
-        .stApp {{
-            background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
-            font-family: 'Segoe UI', sans-serif;
-        }}
-        .nav-container {{
+        .stApp {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .nav-container {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
             padding: 1rem 2rem;
-        }}
-        .nav-content {{
+        }
+        .nav-content {
             max-width: 1200px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }}
-        .nav-logo {{
+        }
+        .nav-logo {
             color: white;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }}
-        .main-content {{
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(12px);
-            border-radius: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .main-content {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 4rem 2rem;
-            margin: 9rem auto 2rem;
-            max-width: 650px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            padding: 3rem 2rem;
+            margin: 8rem auto 2rem;
+            max-width: 600px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             text-align: center;
-        }}
-        .title {{
+        }
+        .title {
             color: white;
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: bold;
             margin-bottom: 1rem;
-        }}
-        .subtitle {{
-            color: rgba(255, 255, 255, 0.95);
-            font-size: 1.25rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
             margin-bottom: 3rem;
-        }}
-        .share-link {{
-            color: #ffffff;
-            font-size: 0.9rem;
-            text-align: right;
-        }}
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
+        }
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
         </style>
     """, unsafe_allow_html=True)
+
+    share_url = "https://voice-pitch-app.streamlit.app"
 
     st.markdown(f"""
         <div class="nav-container">
             <div class="nav-content">
                 <div class="nav-logo">Voice Pitch Detector</div>
-                <div class="share-link">🔗 <a href="{share_url}" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard!'); return false;" style="color: white; text-decoration: none;">Share this app</a></div>
+                
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -300,4 +295,3 @@ elif st.session_state.page == "app":
                 os.unlink(tmp_path)
     else:
         st.info("Please upload an audio file to start pitch detection.")
-
