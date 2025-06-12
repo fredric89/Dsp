@@ -15,7 +15,7 @@ if "page" not in st.session_state:
 if st.session_state.page in ["home", "about"]:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
 
-    share_url = st.experimental_get_query_params().get("share", [st.request.url])[0]
+    share_url = st.query_params.get("share", [st.request.url])[0]
 
     st.markdown(f"""
         <style>
