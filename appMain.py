@@ -15,8 +15,8 @@ if "page" not in st.session_state:
 if st.session_state.page in ["home", "about"]:
     st.set_page_config(page_title="Voice Pitch Detector", layout="centered")
 
-import urllib
-share_url = urllib.parse.quote_plus(st.get_option("server.address", fallback="http://localhost:8501"))
+    import urllib
+    share_url = st.request.url
 
     st.markdown(f"""
         <style>
